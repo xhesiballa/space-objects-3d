@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.min.js"
+    integrity="sha512-Q+IG0h7As6sfqE2t1Xf5IeamNyCXb4EXxGCA9Mlbpv7xtwurVHNdVDbyWeSQ3ulPf2FRlqeu77Ec3SJDdIR63w=="
+    crossorigin="anonymous"></script>
+
+<head>
+    <meta charset="utf-8">
+    <title>My first three.js app</title>
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas style="width:50vw"></canvas>
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, 1920 / 1080, 0.1, 1000);
+
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementsByTagName('canvas').item(0) });
+        renderer.setSize(1920, 1080, false);
+
+        const geometry = new THREE.ConeGeometry(5, 20, 3);
+        const material = new THREE.MeshBasicMaterial({ color: 0xffff00, wireframe: true });
+        const cone = new THREE.Mesh(geometry, material);
+        cone.userData = {
+            speed: new THREE.Vector3(0, 0, 0),
+        }
+        scene.add(cone);
+
+        camera.position.z = 200;
+        // const helper = new THREE.CameraHelper(camera);
+        // scene.add(helper);
+        const objects = [];
+
+
+        // const cameraRig = THREE.group();
+        // cameraRig.add(camera);
+        // cameraRig.add(cone);
+        // camera.lookAt(cone.position);
+        // scene.add(cameraRig);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            cone.rotation.y += 0.01;
+            const obs = spaceBody();
+            if (obs) {
+                objects.push(obs);
+                scene.add(obs);
+            }
+            updateObjects();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        function spaceBody(p = 1) {
+            if (getRandomInt(1000) > 1000 - p * 10) {
+                const geometry = new THREE.IcosahedronGeometry(getRandomInt(10) + 5);
+                const material = new THREE.MeshBasicMaterial({ color: 0x32a8a8, wireframe: true });
+                const body = new THREE.Mesh(geometry, material);
+                body.position.x = 50 - getRandomInt(100);
+                body.position.y = getRandomInt(100) + 50;
+                body.userData = {
+                    rotX: 0.05 - getRandomInt(100) / 1000,
+                    rotY: 0.05 - getRandomInt(100) / 1000,
+                    speed: new THREE.Vector3((100 - getRandomInt(200)) / 100, - getRandomInt(100) / 100,),
+                }
+                return body;
+            }
+        }
+
+        function getRandomInt(max) {
+            return Math.floor(Math.random() * Math.floor(max));
+        }
+
+        function updateObjects() {
+            objects.forEach((sp, index) => {
+                sp.rotation.x += sp.userData.rotX;
+                sp.rotation.y += sp.userData.rotY;
+                sp.position.add(sp.userData.speed);
+                if (sp.position.x < -500 || sp.position.y < -500) {
+                    scene.remove(sp);
+                    objects.splice(index, 1);
+                    sp.geometry.dispose();
+                    console.log('destroy');
+                }
+            });
+            camera.position.x = cone.position.x;
+            camera.position.y = cone.position.y - 50;
+            camera.position.z = cone.position.z + 20;
+            camera.lookAt(cone.position);
+        }
+
+        document.addEventListener('keydown', (e => {
+            switch (e.code) {
+                case 'ArrowUp':
+                    cone.position.y += 1;
+                    break;
+                case 'ArrowDown':
+                    cone.position.y -= 1;
+                    break;
+                case 'ArrowLeft':
+                    cone.position.x -= 1;
+                    break;
+                case 'ArrowRight':
+                    cone.position.x += 1;
+                    break;
+            }
+        }));
+
+    </script>
+
+</html>
